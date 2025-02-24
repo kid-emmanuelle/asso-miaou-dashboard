@@ -18,7 +18,7 @@ if (villeSelect) {
                 data.forEach(groupe => {
                     const option = document.createElement('option');
                     option.value = groupe.numero;
-                    option.textContent = groupe.numero;
+                    option.textContent = groupe.nom;
                     groupeSelect.appendChild(option);
                 });
                 if (data.length === 0) {
@@ -32,9 +32,8 @@ if (villeSelect) {
 }
 
 // Create new member
-
 const signupForm = document.getElementById('signup-form');
-if (signupForm) {  // Only run if element exists
+if (signupForm) {
     signupForm.addEventListener('submit', async function (e) {
         e.preventDefault(); // Prevent form from submitting normally
 
@@ -95,7 +94,7 @@ if (signupForm) {  // Only run if element exists
 /****************************************************************/
 // Login
 const loginForm = document.getElementById('login-form');
-if (loginForm) {  // Only run if element exists
+if (loginForm) {
     loginForm.addEventListener('submit', async function (e) {
         e.preventDefault();
 
