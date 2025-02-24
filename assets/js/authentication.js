@@ -72,14 +72,14 @@ if (signupForm) {
             console.log('Success:', data);
 
             // Show success message
-            alert('Compte créé avec succès!');
+            console.log('Compte créé avec succès!');
 
             // Redirect to login page
             window.location.href = 'sign-in.html';
 
         } catch (error) {
             console.error('Error:', error);
-            alert('Erreur lors de la création du compte. Veuillez réessayer.');
+            showNotification('Erreur lors de la création du compte. Veuillez réessayer.');
         } finally {
             // Re-enable submit button
             const submitBtn = document.getElementById('submit-btn');
@@ -131,7 +131,7 @@ if (loginForm) {
 
         } catch (error) {
             console.error('Error:', error);
-            alert('Erreur lors de la connexion. Veuillez réessayer.');
+            showNotification('Erreur lors de la connexion. Veuillez réessayer.');
         } finally {
             // Re-enable submit button
             const submitBtn = document.getElementById('submit-btn');
@@ -139,4 +139,26 @@ if (loginForm) {
             submitBtn.innerHTML = 'Se connecter';
         }
     });
+}
+
+function showNotification(message) {
+    var notification = document.createElement('div');
+    notification.className = 'notification-popup';
+    notification.innerText = message;
+
+    var closeButton = document.createElement('button');
+    closeButton.innerText = 'X';
+    closeButton.className = 'close-button';
+    closeButton.onclick = function() {
+        document.body.removeChild(notification);
+    };
+
+    notification.appendChild(closeButton);
+    document.body.appendChild(notification);
+
+    setTimeout(function() {
+        if (document.body.contains(notification)) {
+            document.body.removeChild(notification);
+        }
+    }, 2000);
 }

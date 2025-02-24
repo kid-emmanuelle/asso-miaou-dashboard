@@ -17,7 +17,7 @@ async function loadGroups() {
         });
     } catch (error) {
         console.error('Erreur lors du chargement des groupes:', error);
-        alert('Erreur lors du chargement des groupes. Veuillez réessayer.');
+        showNotification('Erreur lors du chargement des groupes. Veuillez réessayer.');
     }
 }
 
@@ -51,7 +51,7 @@ async function handleSubmit(event) {
         }
 
         const result = await response.json();
-        alert('Matériel ajouté avec succès!');
+        console.log('Matériel ajouté avec succès!');
         // Reload the table after successful addition
         loadMateriels();
         // Clear the form
@@ -59,7 +59,7 @@ async function handleSubmit(event) {
 
     } catch (error) {
         console.error('Erreur lors de l\'ajout du matériel:', error);
-        alert('Erreur lors de l\'ajout du matériel. Veuillez réessayer.');
+        showNotification('Erreur lors de l\'ajout du matériel. Veuillez réessayer.');
     }
 }
 
@@ -121,7 +121,7 @@ async function loadMateriels() {
         });
     } catch (error) {
         console.error('Erreur lors du chargement des matériels:', error);
-        alert('Erreur lors du chargement des matériels. Veuillez réessayer.');
+        showNotification('Erreur lors du chargement des matériels. Veuillez réessayer.');
     }
 }
 
@@ -136,13 +136,13 @@ async function deleteMateriel(id) {
             if (response.ok) {
                 // Reload the table after successful deletion
                 loadMateriels();
-                alert('Matériel supprimé avec succès!');
+                console.log('Matériel supprimé avec succès!');
             } else {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
         } catch (error) {
             console.error('Erreur lors de la suppression:', error);
-            alert('Erreur lors de la suppression du matériel. Veuillez réessayer.');
+            showNotification('Erreur lors de la suppression du matériel. Veuillez réessayer.');
         }
     }
 }
@@ -151,3 +151,25 @@ async function deleteMateriel(id) {
 document.addEventListener('DOMContentLoaded', () => {
     loadMateriels();
 });
+
+function showNotification(message) {
+    var notification = document.createElement('div');
+    notification.className = 'notification-popup';
+    notification.innerText = message;
+
+    var closeButton = document.createElement('button');
+    closeButton.innerText = 'X';
+    closeButton.className = 'close-button';
+    closeButton.onclick = function() {
+        document.body.removeChild(notification);
+    };
+
+    notification.appendChild(closeButton);
+    document.body.appendChild(notification);
+
+    setTimeout(function() {
+        if (document.body.contains(notification)) {
+            document.body.removeChild(notification);
+        }
+    }, 2000);
+}

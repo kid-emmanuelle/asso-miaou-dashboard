@@ -42,7 +42,7 @@ document.querySelector('form').addEventListener('submit', async function(e) {
 
         if (existingGroup !== null) {
             // Group already exists (response is a group object)
-            alert('Ce numéro de groupe existe déjà.');
+            showNotification('Ce numéro de groupe existe déjà.');
             return;
         }
 
@@ -62,17 +62,17 @@ document.querySelector('form').addEventListener('submit', async function(e) {
 
         if (createResponse.ok) {
             const result = await createResponse.json();
-            alert('Groupe créé avec succès!');
+            console.log('Groupe créé avec succès!');
             // Reset form
             this.reset();
             loadGroupes(); // Reload the table
         } else {
-            alert('Erreur lors de la création du groupe.');
+            showNotification('Erreur lors de la création du groupe.');
         }
 
     } catch (error) {
         console.error('Erreur:', error);
-        alert('Une erreur est survenue lors de la communication avec le serveur.');
+        showNotification('Une erreur est survenue lors de la communication avec le serveur.');
     }
 });
 
@@ -211,7 +211,7 @@ async function loadGroupes() {
         }
     } catch (error) {
         console.error('Erreur:', error);
-        alert('Une erreur est survenue lors du chargement des groupes');
+        showNotification('Une erreur est survenue lors du chargement des groupes');
     }
 }
 
@@ -223,7 +223,7 @@ async function deleteGroupe(id, numero) {
         const members = await membersResponse.json();
 
         if (members && members.length > 0) {
-            alert('Impossible de supprimer ce groupe car il contient encore des membres. Veuillez d\'abord supprimer ou déplacer tous les membres.');
+            showNotification('Impossible de supprimer ce groupe car il contient encore des membres. Veuillez d\'abord supprimer ou déplacer tous les membres.');
             return;
         }
 
@@ -235,16 +235,38 @@ async function deleteGroupe(id, numero) {
 
             if (response.ok) {
                 loadGroupes();
-                alert('Groupe supprimé avec succès');
+                console.log('Groupe supprimé avec succès');
             } else {
                 throw new Error('Erreur lors de la suppression du groupe');
             }
         }
     } catch (error) {
         console.error('Erreur:', error);
-        alert('Une erreur est survenue lors de la suppression du groupe');
+        showNotification('Une erreur est survenue lors de la suppression du groupe');
     }
 }
 
 // Load groups when the page loads
 document.addEventListener('DOMContentLoaded', loadGroupes);
+
+function showNotification(message) {
+    var notification = document.createElement('div');
+    notification.className = 'notification-popup';
+    notification.innerText = message;
+
+    var closeButton = document.createElement('button');
+    closeButton.innerText = 'X';
+    closeButton.className = 'close-button';
+    closeButton.onclick = function() {
+        document.body.removeChild(notification);
+    };
+
+    notification.appendChild(closeButton);
+    document.body.appendChild(notification);
+
+    setTimeout(function() {
+        if (document.body.contains(notification)) {
+            document.body.removeChild(notification);
+        }
+    }, 2000);
+}
