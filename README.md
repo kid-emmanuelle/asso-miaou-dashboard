@@ -115,4 +115,16 @@ L'application interagit avec une API backend fonctionnant sur `http://localhost:
 - Si le navigateur ne s'ouvre pas automatiquement, naviguez manuellement vers `http://localhost:8000`
 - Assurez-vous que le serveur API backend fonctionne sur le port 8080
 - Vérifiez la console du navigateur pour tout erreur JavaScript
-- Si vous rencontrez des problèmes CORS, assurez-vous que votre serveur backend a les en-têtes CORS appropriés configurés 
+- Si vous rencontrez des problèmes CORS, assurez-vous que votre serveur backend a les en-têtes CORS appropriés configurés
+
+## Compatibilité des Navigateurs
+
+L'application est compatible avec :
+- Chrome (dernière version)
+- Firefox (dernière version)
+- Safari (dernière version)
+- Edge (dernière version)
+
+## Licence
+
+Ce projet est sous licence MIT - voir le fichier LICENSE pour plus de détails.
