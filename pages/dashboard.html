@@ -151,7 +151,7 @@
               <div class="col-8">
                 <div class="numbers">
                   <p class="text-sm mb-0 text-uppercase font-weight-bold">Chiffre d'affaires</p>
-                  <h5 class="font-weight-bolder">
+                  <h5 class="font-weight-bolder" id="revenue-value">
                     $53,000
                   </h5>
                   <p class="mb-0">
@@ -175,7 +175,7 @@
               <div class="col-8">
                 <div class="numbers">
                   <p class="text-sm mb-0 text-uppercase font-weight-bold">Membre Total</p>
-                  <h5 class="font-weight-bolder">
+                  <h5 class="font-weight-bolder" id="members-value">
                     2,300
                   </h5>
                   <p class="mb-0">
@@ -199,7 +199,7 @@
               <div class="col-8">
                 <div class="numbers">
                   <p class="text-sm mb-0 text-uppercase font-weight-bold">Groupe Total</p>
-                  <h5 class="font-weight-bolder">
+                  <h5 class="font-weight-bolder" id="groups-value">
                     3,462
                   </h5>
                   <p class="mb-0">
@@ -223,7 +223,7 @@
               <div class="col-8">
                 <div class="numbers">
                   <p class="text-sm mb-0 text-uppercase font-weight-bold">Commande totale</p>
-                  <h5 class="font-weight-bolder">
+                  <h5 class="font-weight-bolder" id="orders-value">
                     103,430
                   </h5>
                   <p class="mb-0">
@@ -245,7 +245,7 @@
       <div class="col-lg-7 mb-lg-0 mb-4">
         <div class="card z-index-2 h-100">
           <div class="card-header pb-0 pt-3 bg-transparent">
-            <h6 class="text-capitalize">Tendance de dons</h6>
+            <h6 class="text-capitalize">Tendance de Chiffre d'affaires</h6>
             <p class="text-sm mb-0">
               <i class="fa fa-arrow-up text-success"></i> <span class="font-weight-bold">4% de plus</span> en 2025
             </p>
@@ -309,7 +309,7 @@
         <div class="card ">
           <div class="card-header pb-0 p-3">
             <div class="d-flex justify-content-between">
-              <h6 class="mb-2">Commandes par ville</h6>
+              <h6 class="mb-2">Commandes par Vendeur</h6>
             </div>
           </div>
           <div class="table-responsive">
@@ -319,8 +319,8 @@
                 <td class="w-30">
                   <div class="d-flex px-2 py-1 align-items-center">
                     <div class="ms-4">
-                      <p class="text-xs font-weight-bold mb-0">Ville:</p>
-                      <h6 class="text-sm mb-0">France</h6>
+                      <p class="text-xs font-weight-bold mb-0">Vendeur:</p>
+                      <h6 class="text-sm mb-0">Emma Waston</h6>
                     </div>
                   </div>
                 </td>
@@ -342,8 +342,8 @@
                   <div class="d-flex px-2 py-1 align-items-center">
 
                     <div class="ms-4">
-                      <p class="text-xs font-weight-bold mb-0">Ville:</p>
-                      <h6 class="text-sm mb-0">Allemagne</h6>
+                      <p class="text-xs font-weight-bold mb-0">Vendeur:</p>
+                      <h6 class="text-sm mb-0">Jean Dupont</h6>
                     </div>
                   </div>
                 </td>
@@ -366,8 +366,8 @@
                   <div class="d-flex px-2 py-1 align-items-center">
 
                     <div class="ms-4">
-                      <p class="text-xs font-weight-bold mb-0">Ville:</p>
-                      <h6 class="text-sm mb-0">Angleterre</h6>
+                      <p class="text-xs font-weight-bold mb-0">Vendeur:</p>
+                      <h6 class="text-sm mb-0">Sharon Waston</h6>
                     </div>
                   </div>
                 </td>
@@ -383,7 +383,6 @@
                     <h6 class="text-sm mb-0">$190,700</h6>
                   </div>
                 </td>
-
               </tr>
               </tbody>
             </table>
@@ -661,5 +660,6 @@
 <!-- Control Center for Soft Dashboard: parallax effects, scripts for the example pages etc -->
 <script src="../assets/js/argon-dashboard.min.js?v=2.1.0"></script>
 <script src="../assets/js/navigation.js"></script>
+<script src="../assets/js/dashboard-data.js"></script>
 </body>
 </html>
