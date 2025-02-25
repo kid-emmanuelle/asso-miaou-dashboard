@@ -325,15 +325,52 @@ function fetchOrderHistory() {
 
 // Display order history
 function displayOrderHistory(orders) {
-    const orderHistoryList = document.getElementById('order-history-list');
+    const orderHistoryContainer = document.getElementById('order-history-content');
 
-    // Clear previous orders
-    orderHistoryList.innerHTML = '';
+    // Clear previous content
+    orderHistoryContainer.innerHTML = '';
 
     if (orders.length === 0) {
-        orderHistoryList.innerHTML = '<tr><td colspan="5" class="text-center">Aucune commande trouvée</td></tr>';
+        orderHistoryContainer.innerHTML = `
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                Aucune commande trouvée dans votre historique.
+            </div>
+        `;
         return;
     }
+
+    // Calculate total amount
+    const totalAmount = orders.reduce((sum, order) => sum + order.prixTotal, 0);
+
+    // Create summary alert
+    const summaryHTML = `
+    `;
+
+    // Create table for orders
+    const tableHTML = `
+        <div class="table-responsive">
+            <table class="table align-items-center mb-0">
+                <thead>
+                    <tr>
+                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">DATE</th>
+                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">VENDEUR</th>
+                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">PRODUITS</th>
+                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">TOTAL</th>
+                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">DÉTAILS</th>
+                    </tr>
+                </thead>
+                <tbody id="order-history-list">
+                </tbody>
+            </table>
+        </div>
+    `;
+
+    // Add summary and table to container
+    orderHistoryContainer.innerHTML = summaryHTML + tableHTML;
+
+    // Get the table body
+    const orderHistoryList = document.getElementById('order-history-list');
 
     // Reverse the array to show most recent orders first
     orders.reverse().forEach(order => {
@@ -350,105 +387,273 @@ function displayOrderHistory(orders) {
         // Find vendor info
         const vendor = vendors.find(v => v.id === order.idVendeur) || {prenom: 'Inconnu', nom: 'Inconnu'};
 
-        // Count number of products
-        const productCount = order.numerosSerie.length;
+        // Group products by type for better display
+        const productTypes = {};
+        const promises = [];
 
+        // Collect all unique material IDs
+        const uniqueMaterialIds = [...new Set(order.numerosSerie)];
+
+        // Fetch material details if needed
+        uniqueMaterialIds.forEach(materialId => {
+            if (!materialCache) materialCache = {};
+
+            if (!materialCache[materialId]) {
+                const promise = fetch(`http://localhost:8080/api/materiels/${materialId}`)
+                    .then(response => response.json())
+                    .then(material => {
+                        materialCache[materialId] = material;
+                    })
+                    .catch(() => {
+                        materialCache[materialId] = { type: 'INCONNU', marque: 'Inconnu', modele: 'Inconnu' };
+                    });
+                promises.push(promise);
+            }
+        });
+
+        // Create and add row with loading state
         const row = document.createElement('tr');
+        row.id = `order-row-${order.id}`;
         row.innerHTML = `
-      <td>
-        <div class="d-flex px-2 py-1">
-          <div class="d-flex flex-column justify-content-center">
-            <h6 class="mb-0 text-sm">${formattedDate}</h6>
-            <p class="text-xs text-secondary mb-0">ID: ${order.id.substring(0, 8)}...</p>
-          </div>
-        </div>
-      </td>
-      <td>
-        <p class="text-xs font-weight-bold mb-0">${vendor.prenom} ${vendor.nom}</p>
-      </td>
-      <td>
-        <p class="text-xs font-weight-bold mb-0">${productCount} article(s)</p>
-      </td>
-      <td>
-        <p class="text-xs font-weight-bold mb-0">${order.prixTotal.toFixed(2)} €</p>
-      </td>
-      <td>
-        <button class="btn btn-link text-primary mb-0" onclick="showOrderDetails('${order.id}')">
-          <i class="fas fa-info-circle text-xs"></i> Détails
-        </button>
-      </td>
-    `;
+            <td>
+                <div class="d-flex px-2 py-1">
+                    <div class="d-flex flex-column justify-content-center">
+                        <h6 class="mb-0 text-sm">${formattedDate}</h6>
+                        <p class="text-xs text-secondary mb-0">ID: ${order.id.substring(0, 8)}...</p>
+                    </div>
+                </div>
+            </td>
+            <td>
+                <p class="text-xs font-weight-bold mb-0">${vendor.prenom} ${vendor.nom}</p>
+                <p class="text-xs text-secondary mb-0">${vendor.email || ''}</p>
+            </td>
+            <td>
+                <p class="text-xs font-weight-bold mb-0">${order.numerosSerie.length} article(s)</p>
+                <p class="text-xs text-secondary mb-0">Chargement...</p>
+            </td>
+            <td>
+                <p class="text-xs font-weight-bold mb-0">${order.prixTotal.toFixed(2)} €</p>
+            </td>
+            <td>
+                <button class="btn btn-link text-primary mb-0" onclick="showOrderDetails('${order.id}')">
+                    <i class="fas fa-info-circle text-xs"></i> Détails
+                </button>
+            </td>
+        `;
         orderHistoryList.appendChild(row);
+
+        // After all materials are fetched, update product info
+        Promise.all(promises).then(() => {
+            // Count products by type
+            order.numerosSerie.forEach(materialId => {
+                const type = materialCache[materialId]?.type || 'INCONNU';
+                productTypes[type] = (productTypes[type] || 0) + 1;
+            });
+
+            // Format material summary
+            const materialSummary = Object.entries(productTypes)
+                .map(([type, count]) => `${count} × ${type}`)
+                .join(', ');
+
+            // Update the row with product type information
+            const productsCell = row.querySelector('td:nth-child(3)');
+            if (productsCell) {
+                productsCell.innerHTML = `
+                    <p class="text-xs font-weight-bold mb-0">${order.numerosSerie.length} article(s)</p>
+                    <p class="text-xs text-secondary mb-0">${materialSummary}</p>
+                `;
+            }
+        });
     });
 }
 
-// Show order details in a modal (placeholder function)
+// Initialize material cache if it doesn't exist
+let materialCache = {};
+
+// Show order details in a modal with improved UI
 function showOrderDetails(orderId) {
     // Find the order
     fetch(`http://localhost:8080/api/commandes/search/client/${CLIENT_ID}`)
         .then(response => response.json())
-        .then(orders => {
+        .then(async orders => {
             const order = orders.find(o => o.id === orderId);
             if (!order) {
                 showNotification('Commande non trouvée');
                 return;
             }
 
-            // For simplicity, we'll use an alert to show details
-            // In a real application, you would use a modal
-            // Create a modal to show order details
-            const orderDate = new Date(order.dateCommande).toLocaleDateString('fr-FR');
-            const vendor = vendors.find(v => v.id === order.idVendeur) || {prenom: 'Inconnu', nom: 'Inconnu'};
-
-            let message = `
-  <div class="modal fade" id="orderDetailsModal" tabindex="-1" aria-labelledby="orderDetailsModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="orderDetailsModalLabel">Détails de la commande du ${orderDate}</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <p><strong>Vendeur:</strong> ${vendor.prenom} ${vendor.nom}</p>
-          <p><strong>Nombre d'articles:</strong> ${order.numerosSerie.length}</p>
-          <p><strong>Total:</strong> ${order.prixTotal.toFixed(2)} €</p>
-          <p><strong>Produits:</strong></p>
-          <ul>
-`;
-
-            const productCounts = {};
-            order.numerosSerie.forEach(id => {
-                productCounts[id] = (productCounts[id] || 0) + 1;
+            // Format date
+            const orderDate = new Date(order.dateCommande);
+            const formattedDate = orderDate.toLocaleDateString('fr-FR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
             });
 
-            for (const [productId, count] of Object.entries(productCounts)) {
-                message += `<li>ID: ${productId} (x${count})</li>`;
+            // Get vendor details
+            const vendor = vendors.find(v => v.id === order.idVendeur) || {prenom: 'Inconnu', nom: 'Inconnu'};
+
+            // Get material details for each unique material
+            const uniqueMaterialIds = [...new Set(order.numerosSerie)];
+            const materialDetails = [];
+
+            // Fetch material details if not in cache
+            for (const materialId of uniqueMaterialIds) {
+                if (!materialCache[materialId]) {
+                    try {
+                        const response = await fetch(`http://localhost:8080/api/materiels/${materialId}`);
+                        materialCache[materialId] = await response.json();
+                    } catch (error) {
+                        materialCache[materialId] = {
+                            id: materialId,
+                            type: 'INCONNU',
+                            marque: 'Inconnu',
+                            modele: 'Inconnu',
+                            prix: 0
+                        };
+                    }
+                }
+
+                // Count occurrences of this material
+                const count = order.numerosSerie.filter(id => id === materialId).length;
+                materialDetails.push({
+                    ...materialCache[materialId],
+                    count
+                });
             }
 
-            message += `
-          </ul>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
-        </div>
-      </div>
-    </div>
-  </div>
-`;
+            // Create modal HTML
+            const modalHTML = `
+                <div class="modal fade" id="orderDetailsModal" tabindex="-1" aria-labelledby="orderDetailsModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="orderDetailsModalLabel">Détails de la commande</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row mb-4">
+                                    <div class="col-md-6">
+                                        <h6 class="text-sm">Informations générales</h6>
+                                        <p class="text-xs mb-1"><strong>ID:</strong> ${order.id}</p>
+                                        <p class="text-xs mb-1"><strong>Date:</strong> ${formattedDate}</p>
+                                        <p class="text-xs mb-1"><strong>Total:</strong> ${order.prixTotal.toFixed(2)} €</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6 class="text-sm">Vendeur</h6>
+                                        <p class="text-xs mb-1"><strong>Nom:</strong> ${vendor.prenom} ${vendor.nom}</p>
+                                        <p class="text-xs mb-1"><strong>Email:</strong> ${vendor.email || 'N/A'}</p>
+                                        <p class="text-xs mb-1"><strong>Groupe:</strong> ${vendor.numeroGroupe || 'N/A'}</p>
+                                    </div>
+                                </div>
+                                
+                                <h6 class="text-sm mb-3">Articles (${order.numerosSerie.length})</h6>
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Marque</th>
+                                                <th>Modèle</th>
+                                                <th>Type</th>
+                                                <th>Prix unitaire</th>
+                                                <th>Quantité</th>
+                                                <th>Sous-total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${materialDetails.map(material => `
+                                                <tr>
+                                                    <td>${material.marque}</td>
+                                                    <td>${material.modele}</td>
+                                                    <td><span class="badge bg-light text-dark">${material.type}</span></td>
+                                                    <td>${material.prix ? material.prix.toFixed(2) + ' €' : 'N/A'}</td>
+                                                    <td>${material.count}</td>
+                                                    <td>${material.prix ? (material.prix * material.count).toFixed(2) + ' €' : 'N/A'}</td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <td colspan="5" class="text-end"><strong>Total:</strong></td>
+                                                <td><strong>${order.prixTotal.toFixed(2)} €</strong></td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                                <button type="button" class="btn btn-primary" onclick="printOrderDetails()">
+                                    <i class="fas fa-print me-2"></i>Imprimer
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
 
-            document.body.insertAdjacentHTML('beforeend', message);
-            const orderDetailsModal = new bootstrap.Modal(document.getElementById('orderDetailsModal'));
-            orderDetailsModal.show();
+            // Add modal to body
+            const modalContainer = document.createElement('div');
+            modalContainer.innerHTML = modalHTML;
+            document.body.appendChild(modalContainer);
 
-            // Remove the modal from the DOM when closed
-            orderDetailsModal._element.addEventListener('hidden.bs.modal', function () {
-                document.body.removeChild(this);
+            // Initialize and show the modal
+            const modal = new bootstrap.Modal(document.getElementById('orderDetailsModal'));
+            modal.show();
+
+            // Remove modal from DOM when hidden
+            document.getElementById('orderDetailsModal').addEventListener('hidden.bs.modal', function() {
+                document.body.removeChild(modalContainer);
             });
         })
         .catch(error => {
             console.error('Error fetching order details:', error);
             showNotification('Erreur lors du chargement des détails de la commande');
         });
+}
+
+// Print order details
+function printOrderDetails() {
+    const modalContent = document.querySelector('.modal-content').cloneNode(true);
+
+    // Remove buttons
+    modalContent.querySelector('.modal-footer').remove();
+    modalContent.querySelector('.btn-close').remove();
+
+    // Create print window
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <html>
+            <head>
+                <title>Détails de la commande</title>
+                <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+                <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+                <style>
+                    body { padding: 20px; }
+                    @media print {
+                        body { padding: 0; }
+                        .modal-header { border-bottom: 1px solid #dee2e6; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="row mb-4">
+                        <div class="col-12 text-center">
+                            <h4>Association Miaou - Détail de commande</h4>
+                        </div>
+                    </div>
+                    ${modalContent.outerHTML}
+                </div>
+                <script>
+                    window.onload = function() { window.print(); }
+                </script>
+            </body>
+        </html>
+    `);
+    printWindow.document.close();
 }
 
 // Toggle order history visibility
